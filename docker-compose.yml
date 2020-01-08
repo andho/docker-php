@@ -1,0 +1,40 @@
+version: "3"
+
+services:
+  cli:
+    build: ./docker/cli
+    volumes:
+      - ./app:/var/www
+      - $HOME/.dockercache/composer:/root/.composer
+    working_dir: /var/www
+    links:
+      - mysql
+  fpm:
+    build: ./docker/fpm
+    volumes:
+      - ./app:/var/www
+    links:
+      - mysql
+  nginx:
+    image: nginx:1.17
+    volumes:
+      - ./app:/var/www
+      - ./docker/nginx:/etc/nginx/conf.d
+    links:
+      - fpm
+    ports:
+      - 8000:80
+  node:
+    image: node
+    volumes:
+      - ./app/web:/app
+      - $HOME/.dockercache/yarn:/root/.yarn
+    working_dir: /app
+    command: yarn start
+    ports:
+      - 3000:3000
+  mysql:
+    image: mysql:5.7
+    environment:
+      MYSQL_ROOT_PASSWORD: password
+      MYSQL_DATABASE: laravel     
